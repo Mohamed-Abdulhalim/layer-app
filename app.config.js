@@ -28,6 +28,19 @@ module.exports = {
       ],
     },
     plugins: [
+      [
+        'expo-build-properties',
+        {
+          android: {
+            extraProguardRules: [
+              '-keep class androidx.work.** { *; }',
+              '-keep class * extends androidx.room.RoomDatabase { *; }',
+              '-keepnames class * extends androidx.room.RoomDatabase',
+              '-keep class **_Impl { *; }',
+            ].join('\n'),
+          },
+        },
+      ],
       'expo-sqlite',
       'expo-font',
       'expo-background-task',
