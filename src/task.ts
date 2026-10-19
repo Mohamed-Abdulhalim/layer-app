@@ -27,11 +27,11 @@ export async function runEveningCheck(force = false): Promise<boolean> {
   const base = summarize(forecast, today, window);
   const target = summarize(forecast, localDate(1), window);
   if (!base || !target) return false;
-  const v = compare(target, base, 'today');
+  const v = compare(target, base, 'today', summarize(forecast, localDate(-6), window));
   await Notifications.scheduleNotificationAsync({
     content: {
       title: `Tomorrow: ${v.title}`,
-      body: `${v.advice}. Feels like ${Math.round(target.avgFeels)}° (${formatDelta(v.delta)} vs today).`,
+      body: `${v.advice}. Feels like ${Math.round(target.avgFeels)}° (${formatDelta(v.delta)} vs ${v.weekly ? 'last week' : 'today'}).`,
     },
     trigger: Platform.OS === 'android' ? { channelId: CHANNEL } : null,
   });

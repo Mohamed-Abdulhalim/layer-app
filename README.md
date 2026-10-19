@@ -49,6 +49,9 @@ Not a temperature. An answer:
 | 2° to 5° warmer | **A bit warmer.** Go one layer lighter |
 | 5° or more warmer | **Much warmer.** Dress noticeably lighter |
 
+### 🐢 Catches the slow slide
+A drop of 1° a day never looks like much, so Layer also checks against the same day last week. If it's 3° or more colder (or warmer) than a week ago, the verdict changes to **Slowly getting colder** even when today looks like yesterday.
+
 ### 🕗 Only the hours that matter
 Layer compares the average **feels-like** temperature (which accounts for wind and humidity) across the hours I'm actually outside. Morning, daytime, afternoon, evening, or all day, picked from a dropdown. A hot 3 pm can't hide a cold commute anymore.
 

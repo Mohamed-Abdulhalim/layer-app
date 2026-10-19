@@ -291,7 +291,11 @@ function Main(props: { home: Home; onReset: () => void }) {
     const target = summarize(forecast, localDate(offset), window);
     const base = summarize(forecast, localDate(offset - 1), window);
     if (!target || !base) return null;
-    return { target, base, baseName, verdict: compare(target, base, baseName) };
+    const weekAgo = summarize(forecast, localDate(offset - 7), window);
+    const verdict = compare(target, base, baseName, weekAgo);
+    const shown = verdict.weekly && weekAgo ? weekAgo : base;
+    const shownName = verdict.weekly ? 'last week' : baseName;
+    return { target, base, baseName, shown, shownName, verdict };
   }, [forecast, day, window]);
 
   const [wStart, wEnd] = windowHours(window);
@@ -348,7 +352,7 @@ function Main(props: { home: Home; onReset: () => void }) {
                   <Icon name={tier.icon} size={28} color={tier.accent} />
                 </View>
                 <Eyebrow style={{ color: tier.accent, marginTop: 18 }}>
-                  {day} vs {data.baseName}
+                  {day} vs {data.shownName}
                 </Eyebrow>
                 <Serif size={50} style={{ marginTop: 6 }}>
                   {data.verdict.title}
@@ -356,10 +360,12 @@ function Main(props: { home: Home; onReset: () => void }) {
                 <Text style={styles.advice}>{data.verdict.advice}.</Text>
                 <View style={styles.compareRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.compareLabel}>{data.baseName === 'yesterday' ? 'Yesterday' : 'Today'}</Text>
-                    <Text style={styles.compareNum}>{Math.round(data.base.avgFeels)}°</Text>
+                    <Text style={styles.compareLabel}>
+                      {data.shownName === 'yesterday' ? 'Yesterday' : data.shownName === 'today' ? 'Today' : 'Last week'}
+                    </Text>
+                    <Text style={styles.compareNum}>{Math.round(data.shown.avgFeels)}°</Text>
                     <Text style={styles.compareRange}>
-                      {Math.round(data.base.minFeels)}° to {Math.round(data.base.maxFeels)}°
+                      {Math.round(data.shown.minFeels)}° to {Math.round(data.shown.maxFeels)}°
                     </Text>
                   </View>
                   <View style={styles.deltaWrap}>

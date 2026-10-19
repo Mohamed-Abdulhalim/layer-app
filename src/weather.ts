@@ -28,6 +28,7 @@ export type Tier = 'muchColder' | 'colder' | 'same' | 'warmer' | 'muchWarmer';
 export type Verdict = {
   tier: Tier;
   delta: number;
+  weekly: boolean;
   title: string;
   advice: string;
 };
@@ -45,7 +46,7 @@ export async function fetchForecast(home: Home): Promise<Forecast> {
     'https://api.open-meteo.com/v1/forecast' +
     `?latitude=${home.latitude.toFixed(4)}&longitude=${home.longitude.toFixed(4)}` +
     '&hourly=apparent_temperature,temperature_2m,precipitation_probability,wind_speed_10m,weather_code' +
-    '&past_days=1&forecast_days=3&timezone=auto';
+    '&past_days=8&forecast_days=3&timezone=auto';
   const res = await fetch(url);
   if (!res.ok) throw new Error(`Forecast request failed (${res.status})`);
   const json = await res.json();
@@ -96,13 +97,32 @@ export function summarize(forecast: Forecast, date: string, window: WindowName):
   };
 }
 
-export function compare(target: DaySummary, base: DaySummary, baseName: string): Verdict {
+export function compare(target: DaySummary, base: DaySummary, baseName: string, weekAgo?: DaySummary | null): Verdict {
   const delta = target.avgFeels - base.avgFeels;
-  if (delta <= -5) return { tier: 'muchColder', delta, title: 'Much colder', advice: 'Wear heavier clothes' };
-  if (delta <= -2) return { tier: 'colder', delta, title: 'A bit colder', advice: 'Add a light layer' };
-  if (delta < 2) return { tier: 'same', delta, title: `Same as ${baseName}`, advice: `Dress like ${baseName}` };
-  if (delta < 5) return { tier: 'warmer', delta, title: 'A bit warmer', advice: 'Go one layer lighter' };
-  return { tier: 'muchWarmer', delta, title: 'Much warmer', advice: 'Dress noticeably lighter' };
+  if (Math.abs(delta) < 2 && weekAgo) {
+    const drift = target.avgFeels - weekAgo.avgFeels;
+    if (drift <= -3)
+      return {
+        tier: 'colder',
+        delta: drift,
+        weekly: true,
+        title: 'Slowly getting colder',
+        advice: `${Math.round(-drift)}° colder than last week. Time for a heavier layer`,
+      };
+    if (drift >= 3)
+      return {
+        tier: 'warmer',
+        delta: drift,
+        weekly: true,
+        title: 'Slowly getting warmer',
+        advice: `${Math.round(drift)}° warmer than last week. Time to go a layer lighter`,
+      };
+  }
+  if (delta <= -5) return { tier: 'muchColder', delta, weekly: false, title: 'Much colder', advice: 'Wear heavier clothes' };
+  if (delta <= -2) return { tier: 'colder', delta, weekly: false, title: 'A bit colder', advice: 'Add a light layer' };
+  if (delta < 2) return { tier: 'same', delta, weekly: false, title: `Same as ${baseName}`, advice: `Dress like ${baseName}` };
+  if (delta < 5) return { tier: 'warmer', delta, weekly: false, title: 'A bit warmer', advice: 'Go one layer lighter' };
+  return { tier: 'muchWarmer', delta, weekly: false, title: 'Much warmer', advice: 'Dress noticeably lighter' };
 }
 
 export function clothing(avgFeels: number): { label: string; detail: string } {
